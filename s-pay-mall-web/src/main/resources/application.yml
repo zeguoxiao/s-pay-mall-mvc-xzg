@@ -1,0 +1,7 @@
+spring:
+  config:
+    name: s-pay-mall-mvc-xzg
+  profiles:
+#    active: prod
+    active: dev
+
