@@ -6,3 +6,50 @@ server:
       max: 20
       min-spare: 10
     accept-count: 10
+
+weixin:
+  config:
+    originalid: gh_b5c3c9daf3bb
+    token: weixin123
+    app-id: wxbbaebcbec805657e
+    app-secret: 21197da9601f02e110de0b13e6548fe5
+    template_id: ZdzIU0iG9AEHwe856jYrdPPYd-Jcb7NAmdhN67EKus4
+
+alipay:
+  enabled: true
+  app_id: 9021000162641161
+  merchant_private_key: MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUU46dEZjZs+WXM9umStjmHcwbUHklB4JLcOi0toB4e8X02g9hLa86ahXH4Lex3eilILma8SrBWVwuU7XAMejSiyCHCjgtVhO7huK4wb8da88T+le5E5RF9pAwIpuE/cPNoUPl2bHxCL2yR+kuTElHfln6TbCE/zKxFhzrgUBxrYsXUMxuhrQR7py0LjhKp++8sm6yyxydbCajkXYIgf/gCbpJlSSB+DP6iTJgsBZLgfkhindg+MC6hgicUqjN+QZ/gYB9rnU3a4d0O1w88h6Np54GbnIZsWttKO2eDITPlEGX+/uOC1Ags+ghzvLHWPZP3OwfeNmDp0fn/o4A0ue9AgMBAAECggEAcQ0qsr650JyUDmXBMYL0xJfLfLoeS8HoZlW9mBdN3gcAv3oApOHsH8rBpSG7AP+RFWLW9KiCHPJeFxVIfx/LQ8Y02ZhJbwyfZ5wMbCOH5gXIxIJXoEGzDow6I+YMwRWlyrHyjVsajAtMgnja2qXcaHh+XhAezY+w9FZVXo6aLsmWO6d+gIaBhM0vKkm4hThEcJYLBb1WAPyTUpli62LrD5TB6cZhQNm1rfNLgLmrxhT/u2gd3U4bB9Nmls9/F2n6ew5yFhnkl6YvvNQGmEwL+Mp22W0xx6Hcqh32n+Nv7EqXX2ca3jngRClLeP+T50cHIBPYrJwZptmHx3Dn/K9X5QKBgQDxnzupBi9IM4xIljKo32oWGFrpAmfSEgSMzqPfV+OZH0+Zuoh8aFRAkX86l5UX0RAHckVaPSKf4OWJc8gae0OVDl1Ic6amV4OsEhZxkN0uWwEB5eQf8snCpxYCNIGGe8WXGCaXa2G8XOXBL3laQnoND7I4H5LBpvxjkmcT80JPWwKBgQCdJxkuYAIW6ixU3jpbrU8x6oV+5PQQa4YqOnYd19IlfP2V15pWdmX94JnIsl61WxIkmtO4qBkZs3gMQ7gCoXwxKetfFXwrDj39wb9h+IdJUVUEJ8bQzBtStuaPB4V9ewbFd52eiIimyzvTCcqUfdL+Tw9t1KEf23ZU4+ZaknMoxwKBgQCBPpu7HgPMq0YuzajrjBZDG2QFn7PJOroUV7Rwk6K7FXSO1qiLY4MtxqY3wT2PL9VTJlzSmEEdJD+j9rri72yHHtfnGXXbJJTaRhKbTNIDKcqwKTiNnmEuLhInu85NEYfv+osqE9aD221KmQpgrY57zhmWy8zEqX34BSf+E/E0YQKBgA5ovFVVNjvVotTxP1aSkHVaNH1LDtnGkhmjHJtl433OdQ3dI+iTmIxroI4XVLm6LPKwQ4Nl3k9N9k7hkqijF9kGJ++i76ye9K4kqqCYAgeF7o6f+wm//S1bWc55eRLlSdynOAuGJ0lrzwNtnWZ6FvN8WkTOvytFmxbzgnaBgQ+XAoGAMlLARdHxkd96OKt6T3xexxrheTs10mPHm9+uYhyAqRu6/Tni+pbcbX66xpmhEMOAIZPcIppojtusSNaQuTEIgmPRRnJ8AYl0e66OrS6VG4sRQmuv/+KKmpCBsfHoNmD2uMCnrcPIeL+8RmtcMOMprq9KFdO8ePR7oNRPLeuOeo0=
+  alipay_public_key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhAV6O6esb4gaSJ7ySFM5ikYzYMErTydin5HnXODlFBYqpQNWohMMDVC0LIAb6Q/MpFKgE1p2XnG91+kNCF3QplzpREaxhejceU0ls9IRlYR+sEG3EeSj2Tl2wAHuzNhO4ujoJLbAs9Fa6RrgGZbxdw9AlaR9+J2L7cCfrEXqTnI2PveECAnEoT2gLXtLN/MsD8iPshI8vY1CUP4kFQXZiKTouVUUM9hQMfmq5WYhxIRCQLk8/Sr6AUxn+NYNfOEliqPI+hf4JOcg9Y558K0Bn1mGFQ9QYPQV7Rk0imrW+Y4TojtSPPreONn98wu9SE0gYpGmT8KIOyoSH8jmEM0S/QIDAQAB
+  notify_url: http://https://47fbf5fc.r28.cpolar.top/api/v1/alipay/alipay_notify_url
+  return_url: https://gaga.plus
+  gatewayUrl: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+
+mybatis:
+  mapper-locations: classpath:/mybatis/mapper/*.xml
+  config-location:  classpath:/mybatis/config/mybatis-config.xml
+
+
+
+spring:
+  datasource:
+    username: root
+    password: 142857
+    url: jdbc:mysql://127.0.0.1:3306/s-pay-mall?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    validationQuery: SELECT 1
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    filters: stat
+
+logging:
+  level:
+    root: info
+  config: classpath:logback-spring.xml
