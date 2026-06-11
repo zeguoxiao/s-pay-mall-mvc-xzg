@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -24,6 +25,8 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -43,6 +46,11 @@ public class OrderServiceImpl implements IOrderService {
 
     @Resource
     private EventBus eventBus;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
 
     @Override
     public PayOrderRes createOrder(ShopCartReq shopCartReq) throws Exception {
@@ -51,7 +59,8 @@ public class OrderServiceImpl implements IOrderService {
         payOrderReq.setUserId(shopCartReq.getUserId());
         payOrderReq.setProductId(shopCartReq.getProductId());
 
-        PayOrder unpaidOrder = orderDao.queryUnPayOrder(payOrderReq);
+        //PayOrder unpaidOrder = orderDao.queryUnPayOrder(payOrderReq);
+        PayOrder unpaidOrder = getUnpaidOrderFromCacheOrDb(shopCartReq.getUserId(), shopCartReq.getProductId());
 
         if (null != unpaidOrder && Constants.OrderStatusEnum.PAY_WAIT.getCode().equals(unpaidOrder.getStatus())) {
             log.info("创建订单-存在，已存在未支付订单。userId:{} productId:{} orderId:{}", shopCartReq.getUserId(), shopCartReq.getProductId(), unpaidOrder.getOrderId());
@@ -137,6 +146,41 @@ public class OrderServiceImpl implements IOrderService {
         orderDao.updateOrderPayInfo(payOrder);
 
         return payOrder;
+    }/**
+     * 先查Redis缓存，没有再查数据库
+     * 这就是"缓存穿透"的基本防护：查到了就缓存，查不到也缓存一个空值
+     */
+    private PayOrder getUnpaidOrderFromCacheOrDb(String userId, String productId) {
+        String cacheKey = "order:unpay:" + userId + ":" + productId;
+
+        try {
+            // 1. 先查Redis
+            String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                log.info("Redis缓存命中, userId:{} productId:{}", userId, productId);
+                return objectMapper.readValue(cached, PayOrder.class);
+            }
+        } catch (Exception e) {
+            // Redis挂了不影响主流程，降级查数据库
+            log.warn("Redis查询异常，降级查数据库", e);
+        }
+
+        // 2. Redis没有，查数据库
+        PayOrder query = new PayOrder();
+        query.setUserId(userId);
+        query.setProductId(productId);
+        PayOrder order = orderDao.queryUnPayOrder(query);
+
+        // 3. 查到后写入Redis，5分钟过期
+        if (order != null) {
+            try {
+                stringRedisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(order), 5, TimeUnit.MINUTES);
+            } catch (Exception e) {
+                log.warn("Redis写入异常", e);
+            }
+        }
+
+        return order;
     }
 
 }
