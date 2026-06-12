@@ -12,7 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.example.common.Constants.Constants;
 import org.example.dao.IOrderDao;
+import org.example.dao.IProductDao;
+import org.example.domain.po.OrderItem;
+import org.example.dao.IOrderItemDao;
 import org.example.domain.po.PayOrder;
+import org.example.domain.po.Product;
 import org.example.domain.req.ShopCartReq;
 import org.example.domain.res.PayOrderRes;
 import org.example.domain.vo.ProductVO;
@@ -23,9 +27,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
+
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -42,7 +47,11 @@ public class OrderServiceImpl implements IOrderService {
     @Resource
     private ProductRPC productRPC;
     @Resource
+    private IProductDao productDao;
+    @Resource
     private AlipayClient alipayClient;
+    @Resource
+    private IOrderItemDao orderItemDao;
 
     @Resource
     private EventBus eventBus;
@@ -181,6 +190,75 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         return order;
+    }
+
+    /**
+     * 购物车下单：遍历购物车 → 扣库存 → 生成订单
+     */
+    public Map<String, Object> createCartOrder(Long userId, Map<Long, Integer> cartItems) {
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        List<OrderItem> items = new ArrayList<>();
+
+        for (Map.Entry<Long, Integer> entry : cartItems.entrySet()) {
+            Long productId = entry.getKey();
+            Integer quantity = entry.getValue();
+
+//            // 扣库存（防超卖）模拟的
+//            int rows = productRPC.deductStock(productId, quantity);
+            int rows = productDao.deductStock(productId, quantity);
+            if (rows == 0) {
+                throw new RuntimeException("商品库存不足，productId: " + productId);
+            }
+
+//            // 查商品信息 模拟的
+//            ProductVO productVO = productRPC.queryProductByProductId(productId);
+            Product product = productDao.queryById(productId);
+
+//            // 构建订单明细
+//            OrderItem item = new OrderItem();
+//            item.setProductId(productId);
+//            item.setProductName(productVO.getProductName());
+//            item.setPrice(productVO.getPrice());
+//            item.setQuantity(quantity);
+//            items.add(item);
+//
+//            // 累加总价
+//            totalPrice = totalPrice.add(productVO.getPrice().multiply(new BigDecimal(quantity)));
+            OrderItem item = new OrderItem();
+            item.setProductId(productId);
+            item.setProductName(product.getProductName());
+            item.setPrice(product.getPrice());
+            item.setQuantity(quantity);
+            items.add(item);
+
+            totalPrice = totalPrice.add(product.getPrice().multiply(new BigDecimal(quantity)));
+        }
+
+        // 创建订单
+        String orderId = RandomStringUtils.randomNumeric(16);
+        PayOrder order = PayOrder.builder()
+                .userId(String.valueOf(userId))
+                .orderId(orderId)
+                .productId(null)  // 购物车下单，多件商品，没有单一 productId
+                .productName("购物车订单")
+                .totalAmount(totalPrice)
+                .orderTime(new Date())
+                .status(Constants.OrderStatusEnum.CREATE.getCode())
+                .build();
+        orderDao.insert(order);
+
+        // 保存订单明细
+        for (OrderItem item : items) {
+            item.setOrderId(Long.valueOf(orderId));  // String 转 Long
+        }
+        orderItemDao.insertBatch(items);// 循环外面，一次插入全部
+
+        log.info("购物车下单成功: {}, 总价: {}", orderId, totalPrice);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("orderId", orderId);
+        result.put("totalPrice", totalPrice);
+        return result;
     }
 
 }

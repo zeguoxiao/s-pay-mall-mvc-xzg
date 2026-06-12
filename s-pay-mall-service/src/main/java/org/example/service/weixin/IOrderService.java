@@ -1,5 +1,6 @@
 package org.example.service.weixin;
 
+import org.example.domain.po.PayOrder;
 import org.example.domain.req.ShopCartReq;
 import org.example.domain.res.PayOrderRes;
 
@@ -13,6 +14,8 @@ public interface IOrderService {
     List<String> queryNoPayNotifyOrder();
 
     List<String> queryTimeoutCloseOrderList();
+
+
 
     boolean changeOrderClose(String orderId);
 

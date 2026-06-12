@@ -61,4 +61,8 @@
         LIMIT 10
     </select>
 
+    <select id="queryByUserId" resultMap="dataMap">
+        SELECT * FROM pay_order WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
 </mapper>
