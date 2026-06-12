@@ -20,8 +20,12 @@ import org.example.domain.po.Product;
 import org.example.domain.req.ShopCartReq;
 import org.example.domain.res.PayOrderRes;
 import org.example.domain.vo.ProductVO;
+import org.example.service.ICartService;
 import org.example.service.rpc.ProductRPC;
 import org.example.service.weixin.IOrderService;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +56,11 @@ public class OrderServiceImpl implements IOrderService {
     private AlipayClient alipayClient;
     @Resource
     private IOrderItemDao orderItemDao;
+
+    @Autowired
+    private ICartService cartService;
+    @Autowired
+    private RedissonClient redissonClient;
 
     @Resource
     private EventBus eventBus;
@@ -114,6 +123,18 @@ public class OrderServiceImpl implements IOrderService {
         payOrderReq.setOrderId(orderId);
         payOrderReq.setStatus(Constants.OrderStatusEnum.PAY_SUCCESS.getCode());
         orderDao.changeOrderPaySuccess(payOrderReq);
+        // 支付成功后减库存
+        PayOrder order = orderDao.queryByOrderNo(orderId);
+        if (order != null) {
+            List<OrderItem> items = orderItemDao.queryByOrderNo(orderId);
+            if (items != null && !items.isEmpty()) {
+                for (OrderItem item : items) {
+                    productDao.deductStock(item.getProductId(), item.getQuantity());
+                }
+            } else if (order.getProductId() != null) {
+                productDao.deductStock(Long.parseLong(order.getProductId()),1);
+            }
+        }
 
         eventBus.post(JSON.toJSONString(payOrderReq));
     }
@@ -163,27 +184,25 @@ public class OrderServiceImpl implements IOrderService {
         String cacheKey = "order:unpay:" + userId + ":" + productId;
 
         try {
-            // 1. 先查Redis
-            String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+            RBucket<String> bucket = redissonClient.getBucket(cacheKey);
+            String cached = bucket.get();
             if (cached != null) {
                 log.info("Redis缓存命中, userId:{} productId:{}", userId, productId);
                 return objectMapper.readValue(cached, PayOrder.class);
             }
         } catch (Exception e) {
-            // Redis挂了不影响主流程，降级查数据库
             log.warn("Redis查询异常，降级查数据库", e);
         }
 
-        // 2. Redis没有，查数据库
         PayOrder query = new PayOrder();
         query.setUserId(userId);
         query.setProductId(productId);
         PayOrder order = orderDao.queryUnPayOrder(query);
 
-        // 3. 查到后写入Redis，5分钟过期
         if (order != null) {
             try {
-                stringRedisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(order), 5, TimeUnit.MINUTES);
+                RBucket<String> bucket = redissonClient.getBucket(cacheKey);
+                bucket.set(objectMapper.writeValueAsString(order), 5, TimeUnit.MINUTES);
             } catch (Exception e) {
                 log.warn("Redis写入异常", e);
             }
@@ -191,7 +210,6 @@ public class OrderServiceImpl implements IOrderService {
 
         return order;
     }
-
     /**
      * 购物车下单：遍历购物车 → 扣库存 → 生成订单
      */
@@ -258,6 +276,7 @@ public class OrderServiceImpl implements IOrderService {
         Map<String, Object> result = new HashMap<>();
         result.put("orderId", orderId);
         result.put("totalPrice", totalPrice);
+        cartService.clearCart(userId);
         return result;
     }
 

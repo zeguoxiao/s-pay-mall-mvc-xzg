@@ -7,4 +7,6 @@ public interface ICartService {
     void updateQuantity(Long userId, Long productId, int quantity);
     void removeItem(Long userId, Long productId);
     Map<Long, Integer> getCart(Long userId);
+
+    void clearCart(Long userId);
 }

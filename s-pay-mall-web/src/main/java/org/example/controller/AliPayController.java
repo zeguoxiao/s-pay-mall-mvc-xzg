@@ -1,7 +1,10 @@
 package org.example.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
+import com.alipay.api.AlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.alipay.api.request.AlipayTradePagePayRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.common.Constants.Constants;
 import org.example.common.response.Response;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +32,12 @@ public class AliPayController {
 
     @Resource
     private IOrderService orderService;
+    @Resource
+    private AlipayClient alipayClient;
+    @Value("${alipay.notify_url}")
+    private String notifyUrl;
+    @Value("${alipay.return_url}")
+    private String returnUrl;
 
     /**
      * http://localhost:8080/api/v1/alipay/create_pay_order
@@ -106,6 +116,44 @@ public class AliPayController {
         orderService.changeOrderPaySuccess(tradeNo);
 
         return "success";
+    }
+
+    /** 购物车结算 → 创建支付宝支付单 */
+    @RequestMapping(value = "create_cart_pay_order", method = RequestMethod.POST)
+    public Response<String> createCartPayOrder(@RequestBody Map<Long, Integer> cartItems,
+                                               HttpServletRequest request) {
+        try {
+            Long userId = (Long) request.getAttribute("userId");
+            Map<String, Object> orderResult = orderService.createCartOrder(userId, cartItems);
+            String orderId = (String) orderResult.get("orderId");
+            BigDecimal totalPrice = (BigDecimal) orderResult.get("totalPrice");
+
+            // 创建支付宝支付单
+            AlipayTradePagePayRequest payRequest = new AlipayTradePagePayRequest();
+            payRequest.setNotifyUrl(notifyUrl);
+            payRequest.setReturnUrl(returnUrl);
+
+            JSONObject bizContent = new JSONObject();
+            bizContent.put("out_trade_no", orderId);
+            bizContent.put("total_amount", totalPrice.toString());
+            bizContent.put("subject", "购物车订单");
+            bizContent.put("product_code", "FAST_INSTANT_TRADE_PAY");
+            payRequest.setBizContent(bizContent.toString());
+
+            String form = alipayClient.pageExecute(payRequest).getBody();
+
+            return Response.<String>builder()
+                    .code(Constants.ResponseCode.SUCCESS.getCode())
+                    .info("支付单创建成功")
+                    .data(form)
+                    .build();
+        } catch (Exception e) {
+            log.error("购物车结算支付失败", e);
+            return Response.<String>builder()
+                    .code(Constants.ResponseCode.UN_ERROR.getCode())
+                    .info("支付创建失败: " + e.getMessage())
+                    .build();
+        }
     }
 
 }

@@ -5,6 +5,7 @@ import org.example.domain.req.ShopCartReq;
 import org.example.domain.res.PayOrderRes;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IOrderService {
     PayOrderRes createOrder(ShopCartReq shopCartReq) throws Exception;
@@ -19,4 +20,5 @@ public interface IOrderService {
 
     boolean changeOrderClose(String orderId);
 
+    Map<String, Object> createCartOrder(Long userId, Map<Long, Integer> cartItems);
 }

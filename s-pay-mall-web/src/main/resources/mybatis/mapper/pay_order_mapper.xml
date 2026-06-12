@@ -64,5 +64,11 @@
     <select id="queryByUserId" resultMap="dataMap">
         SELECT * FROM pay_order WHERE user_id = #{userId} ORDER BY create_time DESC
     </select>
+    <delete id="deleteById">
+        DELETE FROM pay_order WHERE id = #{id}
+    </delete>
+    <select id="queryByOrderNo" resultMap="dataMap" parameterType="java.lang.String">
+        SELECT * FROM pay_order WHERE order_id = #{orderNo}
+    </select>
 
 </mapper>

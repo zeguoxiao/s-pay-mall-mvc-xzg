@@ -18,7 +18,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/**")   // 拦截所有 /api/ 下的请求
                 .excludePathPatterns(
                         "/api/v1/login/login",
-                        "/api/v1/login/register"
+                        "/api/v1/login/register",
+                        "/api/v1/product/**"
                 );
     }
 

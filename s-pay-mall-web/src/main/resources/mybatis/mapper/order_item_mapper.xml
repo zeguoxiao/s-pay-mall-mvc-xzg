@@ -14,5 +14,8 @@
     <select id="queryByOrderId" resultType="org.example.domain.po.OrderItem">
         SELECT * FROM order_item WHERE order_id = #{orderId}
     </select>
+    <select id="queryByOrderNo" resultType="org.example.domain.po.OrderItem" parameterType="java.lang.String">
+        SELECT * FROM order_item WHERE order_id = #{orderNo}
+    </select>
 
 </mapper>

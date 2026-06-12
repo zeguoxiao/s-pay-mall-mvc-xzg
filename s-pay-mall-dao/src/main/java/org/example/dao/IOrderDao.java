@@ -24,5 +24,9 @@ public interface IOrderDao {
 
     boolean changeOrderClose(String orderId);
 
+    void deleteById(Long id);
+
+    PayOrder queryByOrderNo(String orderNo);
+
 
 }

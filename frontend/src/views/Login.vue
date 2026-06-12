@@ -3,7 +3,7 @@
     <div class="login-box">
       <h2>登录</h2>
       <form @submit.prevent="handleLogin">
-        <input v-model="form.account" placeholder="用户名" required />
+        <input v-model="form.userName" placeholder="用户名" required />
         <input v-model="form.password" type="password" placeholder="密码" required />
         <button type="submit" :disabled="loading">
           {{ loading ? '登录中...' : '登录' }}
@@ -22,7 +22,7 @@ import { login } from '../api/auth'
 import { setToken } from '../utils/token'
 
 const router = useRouter()
-const form = ref({ account: '', password: '' })
+const form = ref({ userName: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 
@@ -31,8 +31,8 @@ async function handleLogin() {
   error.value = ''
   try {
     const res = await login(form.value)
-    setToken(res.data.token)
-    router.push('/')
+    setToken(res.data)
+    window.location.href = '/'
   } catch (e) {
     error.value = e.message || '登录失败'
   } finally {

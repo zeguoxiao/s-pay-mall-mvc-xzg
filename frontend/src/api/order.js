@@ -9,3 +9,8 @@ export function cartCheckout(cartItems) {
 export function getOrderList() {
   return request.get('/api/order/list')
 }
+
+// 删除订单
+export function deleteOrder(id) {
+  return request.delete(`/api/order/delete/${id}`)
+}

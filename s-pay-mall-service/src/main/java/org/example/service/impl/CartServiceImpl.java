@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.service.ICartService;
+import org.redisson.api.RBucket;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,5 +52,11 @@ public class CartServiceImpl implements ICartService {
         String key = CART_PREFIX + userId;
         RMap<Long, Integer> cart = redissonClient.getMap(key);
         return cart;
+    }
+    // 清空购物车
+    @Override
+    public void clearCart(Long userId) {
+        RBucket<Map<Long, Integer>> bucket = redissonClient.getBucket("cart:" + userId);
+        bucket.delete();
     }
 }

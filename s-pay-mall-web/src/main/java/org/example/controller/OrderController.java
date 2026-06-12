@@ -70,4 +70,13 @@ public class OrderController {
                 .data(orders)
                 .build();
     }
+    /** 删除订单 */
+    @DeleteMapping("/delete/{id}")
+    public Response<Object> deleteOrder(@PathVariable Long id) {
+        orderDao.deleteById(id);
+        return Response.<Object>builder()
+                .code(Constants.ResponseCode.SUCCESS.getCode())
+                .info("删除成功")
+                .build();
+    }
 }

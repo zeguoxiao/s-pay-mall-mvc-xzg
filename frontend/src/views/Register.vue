@@ -3,10 +3,9 @@
     <div class="login-box">
       <h2>注册</h2>
       <form @submit.prevent="handleRegister">
-        <input v-model="form.account" placeholder="用户名" required />
+        <input v-model="form.userName" placeholder="用户名" required />
         <input v-model="form.password" type="password" placeholder="密码" required />
-        <input v-model="form.email" placeholder="邮箱" />
-        <input v-model="form.phone" placeholder="手机号" />
+        <input v-model="form.nickName" placeholder="昵称" />
         <button type="submit" :disabled="loading">
           {{ loading ? '注册中...' : '注册' }}
         </button>
@@ -23,7 +22,7 @@ import { useRouter } from 'vue-router'
 import { register } from '../api/auth'
 
 const router = useRouter()
-const form = ref({ account: '', password: '', email: '', phone: '' })
+const form = ref({ userName: '', password: '', nickName: '', email: '', phone: '' })
 const loading = ref(false)
 const error = ref('')
 

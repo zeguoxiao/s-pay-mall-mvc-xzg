@@ -10,8 +10,9 @@
       <div class="cart-list">
         <div v-for="item in cartList" :key="item.productId" class="cart-item">
           <div class="item-info">
-            <h3>商品ID: {{ item.productId }}</h3>
-            <p>数量: {{ item.quantity }}</p>
+            <h3>{{ item.productName || '商品ID: ' + item.productId }}</h3>
+            <p v-if="item.price">¥{{ item.price }} × {{ item.quantity }}</p>
+            <p v-else>数量: {{ item.quantity }}</p>
           </div>
           <div class="item-actions">
             <button @click="handleUpdate(item.productId, item.quantity - 1)" :disabled="item.quantity <= 1">-</button>
@@ -32,9 +33,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { getCartList, updateCart, removeCart } from '../api/cart'
 import { cartCheckout } from '../api/order'
+import request from '../utils/request'
+import { getProductList } from '../api/product'
 
+const router = useRouter()
 const cartList = ref([])
 const loading = ref(true)
 const checking = ref(false)
@@ -46,10 +51,27 @@ async function loadCart() {
   try {
     const res = await getCartList()
     const cart = res.data || {}
-    cartList.value = Object.entries(cart).map(([productId, quantity]) => ({
+    const items = Object.entries(cart).map(([productId, quantity]) => ({
       productId: Number(productId),
-      quantity
+      quantity,
+      productName: '',
+      price: 0
     }))
+    // 查商品信息
+    try {
+      const productRes = await getProductList()
+      const products = productRes.data || []
+      const productMap = {}
+      products.forEach(p => { productMap[p.id] = p })
+      items.forEach(item => {
+        const p = productMap[item.productId]
+        if (p) {
+          item.productName = p.productName
+          item.price = p.price
+        }
+      })
+    } catch (e) {}
+    cartList.value = items
   } catch (e) {
     console.error(e)
   } finally {
@@ -83,9 +105,13 @@ async function handleCheckout() {
   })
   checking.value = true
   try {
-    await cartCheckout(cartItems)
-    alert('下单成功！')
-    await loadCart()
+    const res = await request.post('/api/v1/alipay/create_cart_pay_order', cartItems)
+    if (res.code === '0000' && res.data) {
+      // res.data 是支付宝的表单 HTML，直接写入页面跳转
+      document.write(res.data)
+    } else {
+      alert('支付创建失败: ' + (res.info || '未知错误'))
+    }
   } catch (e) {
     alert(e.message || '下单失败')
   } finally {

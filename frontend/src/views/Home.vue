@@ -36,7 +36,10 @@ const router = useRouter()
 const products = ref([])
 const loading = ref(true)
 
-onMounted(async () => {
+onMounted(() => loadProducts())
+
+async function loadProducts() {
+  loading.value = true
   try {
     const res = await getProductList()
     products.value = res.data || []
@@ -45,7 +48,7 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
 
 async function handleAddCart(product) {
   if (!getToken()) {
@@ -55,7 +58,7 @@ async function handleAddCart(product) {
   try {
     await addCart(product.id, 1)
     alert('已加入购物车')
-    product.stock--
+    await loadProducts()
   } catch (e) {
     alert(e.message || '加入失败')
   }

@@ -8,4 +8,5 @@ import java.util.List;
 public interface IOrderItemDao {
     int insertBatch(List<OrderItem> items);
     List<OrderItem> queryByOrderId(Long orderId);
+    List<OrderItem> queryByOrderNo(String orderNo);
 }
